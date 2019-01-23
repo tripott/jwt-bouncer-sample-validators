@@ -1,0 +1,25 @@
+{
+  "name": "jwt-bouncer-sample-validators",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "lynt",
+    "prettier": "prettier --no-semi --single-quote --write '**/*.js'"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "lynt": "^0.5.4",
+    "prettier": "^1.16.1"
+  },
+  "dependencies": {
+    "isomorphic-fetch": "^2.2.1",
+    "jsonwebtoken": "^8.4.0",
+    "jwk-to-pem": "^2.0.1",
+    "node-http-error": "^2.0.0",
+    "ramda": "^0.26.1"
+  }
+}
