@@ -6,7 +6,7 @@ Pass a validator function to [`jwt-bouncer`](https://www.npmjs.com/package/jwt-b
 
 ## Whitelist Validator
 
-The Whitelist validator sample function takes an `options` object as its argument. The `options` object will contain a propery named `req` which represents the ExpressJS request object and a url to the error documentation. The validator determines if a JWT is present on the incoming request as an `Authorization` header containing a `Bearer` token. If so, it decodes and checks the JWT against a whitelist.
+The Whitelist validator sample function takes an `options` object as its argument. The `options` object will contain a property named `req` which represents the ExpressJS request object and a url to the error documentation. The validator determines if a JWT is present on the incoming request as an `Authorization` header containing a `Bearer` token. If so, it decodes and checks the JWT against a whitelist.
 
 > This validator assumes that a whitelist array has already been retrieved by prior middleware and is available as a `whitelist` property on the request object.
 
@@ -34,9 +34,18 @@ If the jwt did not pass whitelist validation then the object returned from the v
 
 ## JWT Validator
 
-JWT Validator function that takes an options object as its argument containing `req` and `apiErrorDocsURL` properties. The validator then:
+The jwt validator sample function takes an `options` object as its argument. The `options` object will contain a property named `req` which represents the ExpressJS request object and a url to the error documentation.
 
-- Retrieves a json web key (jwk) from a publicly available JSON Web Keyset resource served from an url endpoint.
-- Converts the json web key to PEM format
-  > Privacy-Enhanced Mail (PEM) is a de facto file format for storing and sending cryptographic keys, certificates, and other data, based on a set of 1993 IETF standards defining "privacy-enhanced mail."
-- Verifies the JWT token and audience using against a publicly available JSON Web Keyset resource served from an url endpoint
+The CDS Client (EHR Vendor) MAY make its JWK (JSON Web Key) set available via a URL identified by the `jku` header field, as defined by rfc7515 4.1.2.
+
+If the `jku` (JSON Web Key URL) property does not exist on incoming JWT header from the client then attempt obtain `jku` property from whitelist.
+
+If the `jku` _DOES_ exists then we it to fetch the JWK Set using the `jku` url. The required `kid` value from the JWT header allows a CDS Service to identify the correct JWK in the JWK Set that can be used to verify the signature of the jwt.
+
+If the CDS Client (EHR Vendor) _OMITS_ the `jku` header field in the incoming JWT, the CDS Client MUST make communicate the JWK Set out-of-band. For example, an EHR vendor may not make its JWK Set available via a URL identified by the `jku` header field instead they will communicate the JWK to the CDS Service provider out-of-band. We (CDS Service provider) will store a single key from the EHR vendor JWK Set as a string in PEM format within the `jwkPublicKeyPEM` property on the whitelist.
+
+One we have a JWK (JSON Web Key/Public Key) we make sure its in PEM format and verify the Bearer token with this public key.
+
+## Validator Error Handling
+
+If there's a problem, return an error to the `jwt-bouncer` and let the bouncer call the error handling middleware. If this occurs, the client receives the appropriate HTTP error message. Otherwise, the `jwt-bouncer` calls the next function and the next middleware in line continues to processes the request.
