@@ -73,7 +73,7 @@ module.exports = async options => {
       .catch(convertErr => {
         const err = new HTTPError(
           401,
-          `Problem converting the JWK (json web key) to a PEM format.  Error Message: ${
+          `Unauthorized. Problem converting the JWK (json web key) to a PEM format.  Error Message: ${
             convertErr.message
           }`,
           {
@@ -109,7 +109,7 @@ module.exports = async options => {
     if (isNil(pem)) {
       const err = new HTTPError(
         401,
-        `The CDS Client MUST make its public key, expressed as a JSON Web Key (JWK), available by one of the two methods:  1) via a URL identified by the jku or 2) out of band.  See error documentation within the developer portal for details.`,
+        `Unauthorized. The CDS Client MUST make its public key, expressed as a JSON Web Key (JWK), available by one of the two methods:  1) via a URL identified by the jku or 2) out of band.  See error documentation within the developer portal for details.`,
         {
           name: `Missing JKU or jwk public key PEM`,
           errorCode: `missing-jwu-or-jwk-pem`,
