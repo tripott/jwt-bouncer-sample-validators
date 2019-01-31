@@ -40,7 +40,7 @@ The CDS Client (EHR Vendor) MAY make its JWK (JSON Web Key/Public Key) set avail
 
 If the `jku` _DOES_ exists then we fetch the JWK Set using the `jku` url. The required `kid` value from the JWT header allows a CDS Service to identify the correct JWK in the JWK Set.
 
-If a `jku` _DOES NOT_ exist, the CDS Client MUST make communicate the JWK out-of-band. For example, an EHR vendor may not make its JWK Set available via a URL; instead, they will communicate the JWK to the CDS Service provider (that's us) out-of-band. In this case, we should have stored a single key from the EHR vendor JWK Set as a string in PEM format within the `jwkPublicKeyPEM` property on the whitelist item.
+If a `jku` _DOES NOT_ exist, the CDS Client MUST communicate the JWK to the CDS Service provider (that's us) out-of-band. In this case, we should have already communicated with the EHR vendor and stored a single key from the EHR vendor as a string in PEM format using the `jwkPublicKeyPEM` property on the whitelist item.
 
 Either way, once we have a JWK, we make sure its in PEM format and attempt to verify the jwt.
 
