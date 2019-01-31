@@ -36,15 +36,13 @@ If the jwt did not pass whitelist validation then the object returned from the v
 
 The jwt validator sample function takes an `options` object as its argument. The `options` object will contain a property named `req` which represents the ExpressJS request object and a url to the error documentation.
 
-The CDS Client (EHR Vendor) MAY make its JWK (JSON Web Key) set available via a URL identified by the `jku` header field, as defined by rfc7515 4.1.2.
+The CDS Client (EHR Vendor) MAY make its JWK (JSON Web Key) set available via a URL identified by the `jku` header field, as defined by rfc7515 4.1.2. If the `jku` (JSON Web Key URL) property does not exist on incoming JWT header from the client then attempt to obtain `jku` property from whitelist.
 
-If the `jku` (JSON Web Key URL) property does not exist on incoming JWT header from the client then attempt obtain `jku` property from whitelist.
+If the `jku` _DOES_ exists then we fetch the JWK Set using the `jku` url. The required `kid` value from the JWT header allows a CDS Service to identify the correct JWK in the JWK Set. A JWK is used to verify the signature of the jwt.
 
-If the `jku` _DOES_ exists then we it to fetch the JWK Set using the `jku` url. The required `kid` value from the JWT header allows a CDS Service to identify the correct JWK in the JWK Set that can be used to verify the signature of the jwt.
+If a `jku` _DOES NOT_ exist, the CDS Client MUST make communicate the JWK out-of-band. For example, an EHR vendor may not make its JWK Set available via a URL; instead, they will communicate the JWK to the CDS Service provider (that's us) out-of-band. In this case, we should have stored a single key from the EHR vendor JWK Set as a string in PEM format within the `jwkPublicKeyPEM` property on the whitelist item.
 
-If the CDS Client (EHR Vendor) _OMITS_ the `jku` header field in the incoming JWT, the CDS Client MUST make communicate the JWK Set out-of-band. For example, an EHR vendor may not make its JWK Set available via a URL identified by the `jku` header field instead they will communicate the JWK to the CDS Service provider out-of-band. We (CDS Service provider) will store a single key from the EHR vendor JWK Set as a string in PEM format within the `jwkPublicKeyPEM` property on the whitelist.
-
-One we have a JWK (JSON Web Key/Public Key) we make sure its in PEM format and verify the Bearer token with this public key.
+One we have a JWK (JSON Web Key/Public Key) we make sure its in PEM format and attempt verify the jwt.
 
 ## Validator Error Handling
 
