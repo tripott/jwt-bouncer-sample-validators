@@ -1,6 +1,6 @@
 {
   "name": "jwt-bouncer-sample-validators",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "Pass a validator function to `jwt-bouncer` which will invoke the validator to check the jwt.",
   "main": "index.js",
   "dependencies": {
