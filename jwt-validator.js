@@ -121,11 +121,13 @@ module.exports = async options => {
     }
   }
 
-  // during integration testing jwt verification will always fail.
-  if (process.env.NODE_ENV === "test") {
+  // during integration testing jwt verification will always fail if the public key is served from the ehr's jku.
+  if (process.env.NODE_ENV === "test" && isNil(pem)) {
     console.log("Test Mode --> Skipping jwt verify");
     return { ok: true };
   } else {
+    console.log("Attempting to verify jwt");
+
     jwt.verify(
       token,
       pem,
