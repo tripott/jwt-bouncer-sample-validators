@@ -1,7 +1,7 @@
 require("isomorphic-fetch");
 const jwt = require("jsonwebtoken");
 const jwkToPem = require("jwk-to-pem");
-const { prop, find, propEq, pathOr, trim, isNil } = require("ramda");
+const { prop, find, propEq, pathOr, trim, isNil, not } = require("ramda");
 const HTTPError = require("node-http-error");
 
 const getCDSHookAudienceURL = env => {
@@ -15,9 +15,6 @@ const getCDSHookAudienceURL = env => {
 };
 
 module.exports = async options => {
-  if (process.env.NODE_ENV === "test") {
-    console.log("JWT-VALIDATOR");
-  }
   const { req, apiErrorDocsURL } = options;
 
   const jwtAudienceURL = getCDSHookAudienceURL(req.header("Apigee-Env"));
@@ -28,6 +25,11 @@ module.exports = async options => {
     `${jwtAudienceURL}/${uriPathTenant}/cds-services/${cdsServiceID}`
   ];
 
+  const decodedToken = pathOr(
+    "",
+    ["whitelistValidatorResult", "decodedToken"],
+    req
+  );
   const token = pathOr("", ["whitelistValidatorResult", "token"], req);
 
   // The CDS Client (EHR Vendor) MAY make its JWK Set available via a URL identified by the jku header field,
@@ -38,37 +40,20 @@ module.exports = async options => {
   //   whitelistValidatorResult prop on request so we can obtain the jku.
   //  Use req.whitelistValidatorResult.whiteListItem.jku from the whitelist if
   //   JKU does not exist on incoming JWT header
-  //  The required kid value from the JWT header allows a CDS Service to identify the
-  //  correct JWK in the JWK Set that can be used to verify the signature.
-  // At run time, we will take the `kid` value from the  the JWT header and use it
-  //  verify the signature of the jwt.
 
   const jku = pathOr(
     pathOr(null, ["whitelistValidatorResult", "whiteListItem", "jku"], req),
     ["header", "jku"],
-    token
+    decodedToken
   );
 
-  // if (isEmpty(jku)) {
-  //   const err = new HTTPError(
-  //     401,
-  //     `Unauthorized. Could not locate jku in jwt header or whitelist.`,
-  //     {
-  //       name: `Missing jku`,
-  //       errorCode: `missing-jku`,
-  //       errorReference: `${apiErrorDocsURL}/missing-jku`
-  //     }
-  //   );
-  //
-  //   return { ok: false, err };
-  // }
   let pem = null;
 
   if (jku) {
     pem = await fetch(jku)
       .then(res => res.json())
       .then(prop("keys"))
-      .then(find(propEq("kid", token.header.kid)))
+      .then(find(propEq("kid", decodedToken.header.kid)))
       .then(jwkToPem)
       .catch(convertErr => {
         const err = new HTTPError(
@@ -121,23 +106,25 @@ module.exports = async options => {
     }
   }
 
-  // during integration testing jwt verification will always fail if the public key is served from the ehr's jku.
-  if (process.env.NODE_ENV === "test" && isNil(pem)) {
+  // during integration testing jwt verification could fail since we have old jwt token
+  //   if the public key is served from the ehr's jku.
+  if (process.env.NODE_ENV === "test" && not(isNil(jku))) {
     console.log("Test Mode --> Skipping jwt verify");
     return { ok: true };
   } else {
-    console.log("Attempting to verify jwt");
+    let ok = null;
+    let err = null;
 
     jwt.verify(
       token,
       pem,
       {
-        algorithms: [token.header.alg],
+        algorithms: [decodedToken.header.alg],
         audience
       },
       (jwtVerifyErr, token) => {
         if (jwtVerifyErr) {
-          const err = new HTTPError(
+          err = new HTTPError(
             401,
             `Unauthorized.  Could not verify JWT.  Ensure the expiration and audience within the JWT are valid. Error Message: ${
               jwtVerifyErr.message
@@ -148,14 +135,13 @@ module.exports = async options => {
               errorReference: `${apiErrorDocsURL}/verify-jwt`
             }
           );
-
-          return { ok: false, err };
+          ok = false;
+        } else {
+          ok = true;
         }
-
-        return { ok: true };
       }
     );
-  }
 
-  //return { ok: true };
+    return { ok, err };
+  }
 };

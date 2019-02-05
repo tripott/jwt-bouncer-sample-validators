@@ -14,13 +14,15 @@ If everything is ok, the validator returns an object containing these properties
 
 - `ok` - a value of `true` denotes success
 - `whiteListItem` - the found item in the whitelist
-- `token` - the decoded token
+- `decodedToken` - the decoded token
+- `token` - the token (not decoded)
 
 ```js
 {
   ok: true,
   whiteListItem: foundWhiteListItem,
-  token: decoded
+  decodedToken: decoded,
+  token
 }
 ```
 
