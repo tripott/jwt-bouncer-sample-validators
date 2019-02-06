@@ -1,15 +1,14 @@
-require("isomorphic-fetch");
-const HTTPError = require("node-http-error");
-const jwt = require("jsonwebtoken");
-const { prop, pathOr, trim, not, isEmpty, find } = require("ramda");
+const HTTPError = require('node-http-error')
+const jwt = require('jsonwebtoken')
+const { prop, pathOr, trim, not, isEmpty, find, isNil } = require('ramda')
 
 module.exports = async options => {
-  const { req, apiErrorDocsURL } = options;
-  const uriPathTenant = trim(pathOr("", ["params", "tenant"], req));
-  const authorizationHeader = pathOr("", ["headers", "authorization"], req);
-  const [scheme, token] = authorizationHeader.split(" ");
+  const { req, apiErrorDocsURL } = options
+  const uriPathTenant = trim(pathOr('', ['params', 'tenant'], req))
+  const authorizationHeader = pathOr('', ['headers', 'authorization'], req)
+  const [scheme, token] = authorizationHeader.split(' ')
 
-  if (scheme !== "Bearer") {
+  if (scheme !== 'Bearer' || (isEmpty(token) || isNil(token))) {
     const err = new HTTPError(
       401,
       `Unauthorized. Authorization header must include a Bearer token.`,
@@ -18,12 +17,12 @@ module.exports = async options => {
         errorCode: `missing-bearer-token`,
         errorReference: `${apiErrorDocsURL}/missing-bearer-token`
       }
-    );
+    )
 
-    return { ok: false, err };
+    return { ok: false, err }
   }
 
-  if (not(prop("whitelist", req))) {
+  if (not(prop('whitelist', req))) {
     const err = new HTTPError(
       500,
       `Unable to validate jwt due to missing whitelist.`,
@@ -32,19 +31,19 @@ module.exports = async options => {
         errorCode: `missing-whitelist`,
         errorReference: `${apiErrorDocsURL}/missing-whitelist`
       }
-    );
+    )
 
-    return { ok: false, err };
+    return { ok: false, err }
   }
 
-  const decoded = jwt.decode(token, { complete: true });
-  const iss = pathOr("", ["payload", "iss"], decoded);
+  const decoded = jwt.decode(token, { complete: true })
+  const iss = pathOr('', ['payload', 'iss'], decoded)
 
   const tenant = pathOr(
-    pathOr("", ["payload", "sub"], decoded),
-    ["payload", "tenant"],
+    pathOr('', ['payload', 'sub'], decoded),
+    ['payload', 'tenant'],
     decoded
-  );
+  )
 
   // We require a tenant value for billing CDS Hook services.
   // The `tenant` property is optional on the JWT. However, we require a tenant value for billing.
@@ -53,22 +52,24 @@ module.exports = async options => {
   //  then attempt to use the tenant value provided in the HTTP URL path parameter that is
   //  provided in the request to the CDS Hook Service proxy.
 
-  const { whitelist } = req;
-
+  const { whitelist } = req
+  // if (process.env.NODE_ENV === "test") {
+  //   console.log({ whitelist, tenant, token, decoded });
+  // }
   const hasTenant = listItem =>
     listItem.iss === iss &&
     listItem.tenant === tenant &&
     listItem.uriPathTenant === uriPathTenant &&
-    listItem.enabled === true;
+    listItem.enabled === true
 
   const hasURIPathTenant = listItem =>
     listItem.iss === iss &&
     listItem.uriPathTenant === uriPathTenant &&
-    listItem.enabled === true;
+    listItem.enabled === true
 
   const foundWhiteListItem = isEmpty(tenant)
     ? find(hasURIPathTenant, whitelist)
-    : find(hasTenant, whitelist);
+    : find(hasTenant, whitelist)
 
   if (not(foundWhiteListItem)) {
     const err = new HTTPError(
@@ -79,9 +80,9 @@ module.exports = async options => {
         errorCode: `not-found-on-whitelist`,
         errorReference: `${apiErrorDocsURL}/not-found-on-whitelist`
       }
-    );
+    )
 
-    return { ok: false, err };
+    return { ok: false, err }
   }
 
   return {
@@ -89,5 +90,5 @@ module.exports = async options => {
     whiteListItem: foundWhiteListItem,
     decodedToken: decoded,
     token
-  };
-};
+  }
+}

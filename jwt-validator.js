@@ -1,36 +1,36 @@
-require("isomorphic-fetch");
-const jwt = require("jsonwebtoken");
-const jwkToPem = require("jwk-to-pem");
-const { prop, find, propEq, pathOr, trim, isNil, not } = require("ramda");
-const HTTPError = require("node-http-error");
+require('isomorphic-fetch')
+const jwt = require('jsonwebtoken')
+const jwkToPem = require('jwk-to-pem')
+const { prop, find, propEq, pathOr, trim, isNil, not } = require('ramda')
+const HTTPError = require('node-http-error')
 
 const getCDSHookAudienceURL = env => {
-  return env === "dev"
+  return env === 'dev'
     ? process.env.CDS_HOOK_JWT_AUDIENCE_URL_DEV
-    : env === "test"
+    : env === 'test'
     ? process.env.CDS_HOOK_JWT_AUDIENCE_URL_TEST
-    : env === "prod"
+    : env === 'prod'
     ? process.env.CDS_HOOK_JWT_AUDIENCE_URL_PROD
-    : process.env.CDS_HOOK_JWT_AUDIENCE_URL_DEV;
-};
+    : process.env.CDS_HOOK_JWT_AUDIENCE_URL_DEV
+}
 
 module.exports = async options => {
-  const { req, apiErrorDocsURL } = options;
+  const { req, apiErrorDocsURL } = options
 
-  const jwtAudienceURL = getCDSHookAudienceURL(req.header("Apigee-Env"));
-  const uriPathTenant = trim(pathOr("", ["params", "tenant"], req));
-  const cdsServiceID = pathOr("view-medication-risk", ["params", "id"], req);
+  const jwtAudienceURL = getCDSHookAudienceURL(req.header('Apigee-Env'))
+  const uriPathTenant = trim(pathOr('', ['params', 'tenant'], req))
+  const cdsServiceID = pathOr('view-medication-risk', ['params', 'id'], req)
   const audience = [
     `${jwtAudienceURL}/${uriPathTenant}/cds-services`,
     `${jwtAudienceURL}/${uriPathTenant}/cds-services/${cdsServiceID}`
-  ];
+  ]
 
   const decodedToken = pathOr(
-    "",
-    ["whitelistValidatorResult", "decodedToken"],
+    '',
+    ['whitelistValidatorResult', 'decodedToken'],
     req
-  );
-  const token = pathOr("", ["whitelistValidatorResult", "token"], req);
+  )
+  const token = pathOr('', ['whitelistValidatorResult', 'token'], req)
 
   // The CDS Client (EHR Vendor) MAY make its JWK Set available via a URL identified by the jku header field,
   //   as defined by rfc7515 4.1.2.
@@ -42,18 +42,18 @@ module.exports = async options => {
   //   JKU does not exist on incoming JWT header
 
   const jku = pathOr(
-    pathOr(null, ["whitelistValidatorResult", "whiteListItem", "jku"], req),
-    ["header", "jku"],
+    pathOr(null, ['whitelistValidatorResult', 'whiteListItem', 'jku'], req),
+    ['header', 'jku'],
     decodedToken
-  );
+  )
 
-  let pem = null;
+  let pem = null
 
   if (jku) {
     pem = await fetch(jku)
       .then(res => res.json())
-      .then(prop("keys"))
-      .then(find(propEq("kid", decodedToken.header.kid)))
+      .then(prop('keys'))
+      .then(find(propEq('kid', decodedToken.header.kid)))
       .then(jwkToPem)
       .catch(convertErr => {
         const err = new HTTPError(
@@ -66,10 +66,10 @@ module.exports = async options => {
             errorCode: `converting-jwk-to-pem-format`,
             errorReference: `${apiErrorDocsURL}/converting-jwk-to-pem`
           }
-        );
+        )
 
-        return { ok: false, err };
-      });
+        return { ok: false, err }
+      })
   } else {
     // If the CDS Client (EHR Vendor) omits the jku header field in the incoming JWT,
     //  the CDS Client MUST make its public key, expressed as a JSON Web Key (JWK) in a JWK Set,
@@ -87,9 +87,9 @@ module.exports = async options => {
 
     pem = pathOr(
       null,
-      ["whitelistValidatorResult", "whiteListItem", "jwkPublicKeyPEM"],
+      ['whitelistValidatorResult', 'whiteListItem', 'jwkPublicKeyPEM'],
       req
-    );
+    )
 
     if (isNil(pem)) {
       const err = new HTTPError(
@@ -100,20 +100,20 @@ module.exports = async options => {
           errorCode: `missing-jwu-or-jwk-pem`,
           errorReference: `${apiErrorDocsURL}/missing-jwu-or-jwk-pem`
         }
-      );
+      )
 
-      return { ok: false, err };
+      return { ok: false, err }
     }
   }
 
   // during integration testing jwt verification could fail since we have old jwt token
   //   if the public key is served from the ehr's jku.
-  if (process.env.NODE_ENV === "test" && not(isNil(jku))) {
-    console.log("Test Mode --> Skipping jwt verify");
-    return { ok: true };
+  if (process.env.NODE_ENV === 'test' && not(isNil(jku))) {
+    console.log('Test Mode --> Skipping jwt verify')
+    return { ok: true }
   } else {
-    let ok = null;
-    let err = null;
+    let ok = null
+    let err = null
 
     jwt.verify(
       token,
@@ -134,14 +134,14 @@ module.exports = async options => {
               errorCode: `verify-jwt`,
               errorReference: `${apiErrorDocsURL}/verify-jwt`
             }
-          );
-          ok = false;
+          )
+          ok = false
         } else {
-          ok = true;
+          ok = true
         }
       }
-    );
+    )
 
-    return { ok, err };
+    return { ok, err }
   }
-};
+}
