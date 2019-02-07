@@ -17,7 +17,10 @@ const getCDSHookAudienceURL = env => {
 module.exports = async options => {
   const { req, apiErrorDocsURL } = options
 
-  const jwtAudienceURL = getCDSHookAudienceURL(req.header('Apigee-Env'))
+  const apigeeEnv =
+    process.env.NODE_ENV === 'test' ? 'test' : req.header('Apigee-Env')
+
+  const jwtAudienceURL = getCDSHookAudienceURL(apigeeEnv)
   const uriPathTenant = trim(pathOr('', ['params', 'tenant'], req))
   const cdsServiceID = pathOr('view-medication-risk', ['params', 'id'], req)
   const audience = [
@@ -48,6 +51,7 @@ module.exports = async options => {
   )
 
   let pem = null
+  let err = null
 
   if (jku) {
     pem = await fetch(jku)
@@ -56,7 +60,7 @@ module.exports = async options => {
       .then(find(propEq('kid', decodedToken.header.kid)))
       .then(jwkToPem)
       .catch(convertErr => {
-        const err = new HTTPError(
+        err = new HTTPError(
           401,
           `Unauthorized. Problem converting the JWK (json web key) to a PEM format.  Error Message: ${
             convertErr.message
@@ -92,13 +96,13 @@ module.exports = async options => {
     )
 
     if (isNil(pem)) {
-      const err = new HTTPError(
+      err = new HTTPError(
         401,
         `Unauthorized. The CDS Client MUST make its public key, expressed as a JSON Web Key (JWK), available by one of the two methods:  1) via a URL identified by the jku or 2) out of band.  See error documentation within the developer portal for details.`,
         {
           name: `Missing JKU or jwk public key PEM`,
-          errorCode: `missing-jwu-or-jwk-pem`,
-          errorReference: `${apiErrorDocsURL}/missing-jwu-or-jwk-pem`
+          errorCode: `missing-jku-or-jwk-pem`,
+          errorReference: `${apiErrorDocsURL}/missing-jku-or-jwk-pem`
         }
       )
 
@@ -106,15 +110,16 @@ module.exports = async options => {
     }
   }
 
-  // during integration testing jwt verification could fail since we have old jwt token
-  //   if the public key is served from the ehr's jku.
+  if (process.env.NODE_ENV === 'test') {
+    console.log({ jku })
+  }
+
+  // during testing jwt verification could fail since we have old jwt token
+  //   if the public key set is served from the ehr's jku url.
   if (process.env.NODE_ENV === 'test' && not(isNil(jku))) {
     console.log('Test Mode --> Skipping jwt verify')
     return { ok: true }
   } else {
-    let ok = null
-    let err = null
-
     jwt.verify(
       token,
       pem,
@@ -135,13 +140,9 @@ module.exports = async options => {
               errorReference: `${apiErrorDocsURL}/verify-jwt`
             }
           )
-          ok = false
-        } else {
-          ok = true
         }
       }
     )
-
-    return { ok, err }
+    return err ? { ok: false, err } : { ok: true }
   }
 }

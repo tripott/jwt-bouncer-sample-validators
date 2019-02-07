@@ -28,9 +28,9 @@ If everything is ok, the validator returns an object containing these properties
 
 If the jwt did not pass whitelist validation then the object returned from the validator will look like:
 
-```js
+```
 {
-  ok: false, err;
+  ok: false, err
 }
 ```
 
@@ -46,6 +46,38 @@ If a `jku` _DOES NOT_ exist, the CDS Client MUST communicate the JWK to the CDS 
 
 Either way, once we have a JWK, we make sure its in PEM format and attempt to verify the jwt.
 
-## Validator Error Handling
+> This validator assumes that a `whitelistValidatorResult` property on the incoming request object.
 
-If there's a problem, return an error to the `jwt-bouncer` and let the bouncer call the error handling middleware. If this occurs, the client receives the appropriate HTTP error message. Otherwise, the `jwt-bouncer` calls the next function and the next middleware in line continues to processes the request.
+If everything is ok, the validator returns an object with an `ok` prop set to `true`:
+
+```js
+{
+  ok: true;
+}
+```
+
+If everything there's an error, then return an object with an `ok` prop set to `false` and an `err` prop:
+
+```
+{
+  ok: false,
+  err
+}
+```
+
+## Handling Errors
+
+If there's a problem, the validator should return a validation result object with an `ok` prop set to `false` and an `err` prop set to an error. The object is handled by the [`jwt-bouncer`](https://www.npmjs.com/package/jwt-bouncer) which is responsible for calling the error handling middleware.
+
+```
+{
+  "ok": false,
+  err
+}
+```
+
+## Handling Success
+
+If there is not an error, the validator should return a validation result object with an `ok` prop set to `true` and any other properties that the next middleware in line may need, if necessary.
+
+The [`jwt-bouncer`](https://www.npmjs.com/package/jwt-bouncer) will take the validation result object and set it to the designated property that was determined when you created the validator through the [`jwt-bouncer`](https://www.npmjs.com/package/jwt-bouncer). Finally, the [`jwt-bouncer`](https://www.npmjs.com/package/jwt-bouncer) calls the `next` function and the next middleware in line continues to processes the request.

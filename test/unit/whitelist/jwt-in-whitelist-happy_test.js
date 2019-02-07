@@ -1,10 +1,8 @@
 const test = require('tape')
-const whitelistValidator = require('../../whitelist-validator')
-const whitelist = require('../fixtures/whitelist-validator-tests/whitelist1.json')
-const {
-  token
-} = require('../fixtures/whitelist-validator-tests/encoded-labs-tenant-token')
-const hasKeys = require('../../lib/has-keys')
+const whitelistValidator = require('../../../whitelist-validator')
+const whitelist = require('../../fixtures/whitelist/whitelist1.json')
+const { token } = require('../../fixtures/whitelist/encoded-labs-tenant-token')
+const hasKeys = require('../../../lib/has-keys')
 const { prop } = require('ramda')
 
 const req = {
@@ -22,12 +20,12 @@ const options = {
   apiErrorDocsURL: 'https://foo.api.com'
 }
 
-test(`jwt should be on whitelist :)`, async t => {
+test(`whitelist-validator: jwt should be on whitelist :)`, async t => {
   t.plan(2)
 
   whitelistValidator(options)
     .then(resultObj => {
-      console.log({ resultObj })
+      //console.log({ resultObj });
 
       t.equals(prop('ok', resultObj), true)
       t.equals(

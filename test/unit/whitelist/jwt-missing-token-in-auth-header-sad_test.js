@@ -1,10 +1,10 @@
 const test = require('tape')
-const whitelistValidator = require('../../whitelist-validator')
-const whitelist = require('../fixtures/whitelist-validator-tests/whitelist3.json')
-const {
-  token
-} = require('../fixtures/whitelist-validator-tests/encoded-labs-tenant-token')
-const hasKeys = require('../../lib/has-keys')
+const whitelistValidator = require('../../../whitelist-validator')
+const whitelist = require('../../fixtures/whitelist/whitelist3.json')
+// const {
+//   token
+// } = require("../fixtures/whitelist-validator-tests/encoded-labs-tenant-token");
+const hasKeys = require('../../../lib/has-keys')
 const { prop, path } = require('ramda')
 
 const req = {
@@ -12,7 +12,7 @@ const req = {
     tenant: 'labs'
   },
   headers: {
-    authorization: `${token}`
+    authorization: `Bearer `
   },
   whitelist
 }
@@ -22,12 +22,12 @@ const options = {
   apiErrorDocsURL: 'https://foo.api.com'
 }
 
-test(`jwt missing scheme 'Bearer' in auth header :(`, async t => {
+test(`whitelist-validator: jwt missing token in auth header :(`, async t => {
   t.plan(4)
 
   whitelistValidator(options)
     .then(resultObj => {
-      console.log({ resultObj })
+      //console.log({ resultObj });
 
       t.equals(prop('ok', resultObj), false)
       t.equals(hasKeys(resultObj, ['ok', 'err']), true)
