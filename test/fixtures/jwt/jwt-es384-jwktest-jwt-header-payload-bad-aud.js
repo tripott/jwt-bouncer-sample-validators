@@ -9,7 +9,7 @@ const jwtHeader = {
 
 const jwtPayload = {
   iss: 'https://sandbox.cds-hooks.org',
-  aud: 'http://localhost:9000/jwktest/cds-services',
+  aud: 'https://www.evil-corp.com/medwise/jwktest/cds-services',
   exp: Math.round(Date.now() / 1000 + 300),
   iat: Math.round(Date.now() / 1000),
   jti: uuid(),

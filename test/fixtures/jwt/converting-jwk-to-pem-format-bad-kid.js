@@ -17,7 +17,7 @@ const req = {
       header: {
         alg: 'ES256',
         typ: 'JWT',
-        kid: 'd9cd3c4f-eb08-4304-b973-44f352fd2ca2',
+        kid: null,
         jku: 'https://sandbox.cds-hooks.org/.well-known/jwks.json'
       },
       payload: {

@@ -54,10 +54,12 @@ module.exports = async options => {
   let err = null
 
   if (jku) {
+    const kid = pathOr(null, ['header', 'kid'], decodedToken)
+
     pem = await fetch(jku)
       .then(res => res.json())
       .then(prop('keys'))
-      .then(find(propEq('kid', decodedToken.header.kid)))
+      .then(find(propEq('kid', kid)))
       .then(jwkToPem)
       .catch(convertErr => {
         err = new HTTPError(
@@ -68,12 +70,14 @@ module.exports = async options => {
           {
             name: `Converting JWK to PEM Format`,
             errorCode: `converting-jwk-to-pem-format`,
-            errorReference: `${apiErrorDocsURL}/converting-jwk-to-pem`
+            errorReference: `${apiErrorDocsURL}/converting-jwk-to-pem-format`
           }
         )
-
-        return { ok: false, err }
       })
+
+    if (err) {
+      return { ok: false, err }
+    }
   } else {
     // If the CDS Client (EHR Vendor) omits the jku header field in the incoming JWT,
     //  the CDS Client MUST make its public key, expressed as a JSON Web Key (JWK) in a JWK Set,
@@ -108,10 +112,6 @@ module.exports = async options => {
 
       return { ok: false, err }
     }
-  }
-
-  if (process.env.NODE_ENV === 'test') {
-    console.log({ jku })
   }
 
   // during testing jwt verification could fail since we have old jwt token

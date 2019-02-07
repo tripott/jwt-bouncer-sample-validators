@@ -8,7 +8,7 @@ const req = {
     whiteListItem: {
       iss: 'https://sandbox.cds-hooks.org',
       tenant: '48163c5e-88b5-4cb3-92d3-23b800caa927',
-      jku: 'https://sandbox.cds-hooks.org/.well-known/jwks.json',
+      //jku: "https://sandbox.cds-hooks.org/.well-known/jwks.json",
       uriPathTenant: 'labs',
       enabled: true,
       jwkPublicKeyPEM: null
@@ -17,8 +17,9 @@ const req = {
       header: {
         alg: 'ES256',
         typ: 'JWT',
-        kid: 'd9cd3c4f-eb08-4304-b973-44f352fd2ca2',
-        jku: 'https://sandbox.cds-hooks.org/.well-known/jwks.json'
+        kid: 'd9cd3c4f-eb08-4304-b973-44f352fd2ca2'
+        //,
+        //jku: 'https://sandbox.cds-hooks.org/.well-known/jwks.json'
       },
       payload: {
         iss: 'https://sandbox.cds-hooks.org',

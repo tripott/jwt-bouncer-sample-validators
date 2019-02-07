@@ -13,7 +13,7 @@ const jwtPayload = {
   exp: Math.round(Date.now() / 1000 + 300),
   iat: Math.round(Date.now() / 1000),
   jti: uuid(),
-  tenant: 'jwktest'
+  tenant: 'labs'
 }
 
 module.exports = { jwtHeader, jwtPayload }
