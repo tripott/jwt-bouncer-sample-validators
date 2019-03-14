@@ -6,9 +6,6 @@ const hasKeys = require('../../../lib/has-keys')
 const { prop, path } = require('ramda')
 
 const req = {
-  params: {
-    tenant: 'labs'
-  },
   headers: {
     authorization: `Bearer ${token}`
   },

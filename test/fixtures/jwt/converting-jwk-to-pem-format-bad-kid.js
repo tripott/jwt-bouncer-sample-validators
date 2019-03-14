@@ -23,7 +23,7 @@ const req = {
       payload: {
         iss: 'https://sandbox.cds-hooks.org',
         sub: '48163c5e-88b5-4cb3-92d3-23b800caa927',
-        aud: 'http://localhost:9000/labs/cds-services/view-medication-risk',
+        aud: 'http://localhost:9000/cds-services/view-medication-risk',
         exp: 1549553283,
         iat: 1549552983,
         jti: 'b59df628-9dc1-41e7-a301-8a891fd03fbd'
