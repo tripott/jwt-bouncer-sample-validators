@@ -1,10 +1,9 @@
 const HTTPError = require('node-http-error')
 const jwt = require('jsonwebtoken')
-const { prop, pathOr, trim, not, isEmpty, find, isNil } = require('ramda')
+const { prop, pathOr, not, isEmpty, find, isNil } = require('ramda')
 
 module.exports = async options => {
   const { req, apiErrorDocsURL } = options
-  const uriPathTenant = trim(pathOr('', ['params', 'tenant'], req))
   const authorizationHeader = pathOr('', ['headers', 'authorization'], req)
   const [scheme, token] = authorizationHeader.split(' ')
 
@@ -45,36 +44,31 @@ module.exports = async options => {
     decoded
   )
 
-  // We require a tenant value for billing CDS Hook services.
-  // The `tenant` property is optional on the JWT. However, we require a tenant value for billing.
-  // If the `tenant` property exists on JWT, the use it first when validating CDS Hook client against whitelist.
-  // If whitelist entry cannot be found using the JWT `tenant` property,
-  //  then attempt to use the tenant value provided in the HTTP URL path parameter that is
-  //  provided in the request to the CDS Hook Service proxy.
+  // The `tenant` or `sub` property is optional on the JWT.
+  // If the tenant exists, then
+  //  use it first when validating CDS Hook client against whitelist.
+  // Otherwise, we assume the iss is unique.
+  // If iss is not unique then the EHR must provide a `tenant` value in the JWT
 
   const { whitelist } = req
   // if (process.env.NODE_ENV === "test") {
   //   console.log({ whitelist, tenant, token, decoded });
   // }
-  const hasTenant = listItem =>
+  const byIssAndTenant = listItem =>
     listItem.iss === iss &&
     listItem.tenant === tenant &&
-    listItem.uriPathTenant === uriPathTenant &&
     listItem.enabled === true
 
-  const hasURIPathTenant = listItem =>
-    listItem.iss === iss &&
-    listItem.uriPathTenant === uriPathTenant &&
-    listItem.enabled === true
+  const byIss = listItem => listItem.iss === iss && listItem.enabled === true
 
   const foundWhiteListItem = isEmpty(tenant)
-    ? find(hasURIPathTenant, whitelist)
-    : find(hasTenant, whitelist)
+    ? find(byIss, whitelist)
+    : find(byIssAndTenant, whitelist)
 
   if (not(foundWhiteListItem)) {
     const err = new HTTPError(
       401,
-      `Unauthorized. We were unable to verify a valid tenant and EHR.`,
+      `Unauthorized. We were unable to verify a valid iss or tenant.  If tenant value not provided in JWT, then iss value must be unique in whitelist.`,
       {
         name: `Not Found on Whitelist`,
         errorCode: `not-found-on-whitelist`,

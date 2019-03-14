@@ -1,7 +1,7 @@
 require('isomorphic-fetch')
 const jwt = require('jsonwebtoken')
 const jwkToPem = require('jwk-to-pem')
-const { prop, find, propEq, pathOr, trim, isNil, not } = require('ramda')
+const { prop, find, propEq, pathOr, isNil, not } = require('ramda')
 const HTTPError = require('node-http-error')
 
 const getCDSHookAudienceURL = env => {
@@ -21,11 +21,11 @@ module.exports = async options => {
     process.env.NODE_ENV === 'test' ? 'test' : req.header('Apigee-Env')
 
   const jwtAudienceURL = getCDSHookAudienceURL(apigeeEnv)
-  const uriPathTenant = trim(pathOr('', ['params', 'tenant'], req))
+  //const uriPathTenant = trim(pathOr('', ['params', 'tenant'], req))
   const cdsServiceID = pathOr('view-medication-risk', ['params', 'id'], req)
   const audience = [
-    `${jwtAudienceURL}/${uriPathTenant}/cds-services`,
-    `${jwtAudienceURL}/${uriPathTenant}/cds-services/${cdsServiceID}`
+    `${jwtAudienceURL}/cds-services`,
+    `${jwtAudienceURL}/cds-services/${cdsServiceID}`
   ]
 
   const decodedToken = pathOr(
