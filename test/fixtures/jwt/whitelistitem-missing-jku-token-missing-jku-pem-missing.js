@@ -1,6 +1,3 @@
-// const params = { tenant: 'labs' }
-// const params = { tenant: 'labs', id: 'view-medication-risk' }
-
 const req = {
   whitelistValidatorResult: {
     ok: true,
@@ -8,7 +5,6 @@ const req = {
       iss: 'https://sandbox.cds-hooks.org',
       tenant: '48163c5e-88b5-4cb3-92d3-23b800caa927',
       //jku: "https://sandbox.cds-hooks.org/.well-known/jwks.json",
-      //uriPathTenant: 'labs',
       enabled: true
       //,
       //jwkPublicKeyPEM: null

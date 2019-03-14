@@ -20,9 +20,6 @@ const whiteListItem = {
     '-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEpMG9Efah0bo91AI4TxQ3BTfQyFLuK5bU\nUj1QhEyBoohllYystK9Lylfw+Emcpoop+v65Oq4Q4bgD6CjeZkkSOAnZe6EFAW0H\nLoGAeTQmzWnzi905dZrt9l882XdQwlzU\n-----END PUBLIC KEY-----\n'
 }
 
-// const params = { tenant: 'jwktest' }
-// const params = { tenant: 'labs', id: 'view-medication-risk' }
-
 const req = {
   whitelistValidatorResult: {
     ok: true,

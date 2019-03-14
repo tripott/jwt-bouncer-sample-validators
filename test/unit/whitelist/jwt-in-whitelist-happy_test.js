@@ -22,8 +22,6 @@ test(`whitelist-validator: jwt should be on whitelist :)`, async t => {
 
   whitelistValidator(options)
     .then(resultObj => {
-      //console.log({ resultObj });
-
       t.equals(prop('ok', resultObj), true)
       t.equals(
         hasKeys(resultObj, ['ok', 'whiteListItem', 'decodedToken', 'token']),

@@ -8,9 +8,6 @@ const hasKeys = require('../../../lib/has-keys')
 const { prop, path } = require('ramda')
 
 const req = {
-  params: {
-    tenant: 'labs'
-  },
   headers: {
     authorization: `Bearer `
   },
@@ -27,8 +24,6 @@ test(`whitelist-validator: jwt missing token in auth header :(`, async t => {
 
   whitelistValidator(options)
     .then(resultObj => {
-      //console.log({ resultObj });
-
       t.equals(prop('ok', resultObj), false)
       t.equals(hasKeys(resultObj, ['ok', 'err']), true)
       t.equals(path(['err', 'statusCode'], resultObj), 401)

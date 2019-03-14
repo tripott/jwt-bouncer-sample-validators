@@ -16,8 +16,6 @@ test(`jwt-validator: verify token using publicKeyPEM with bad EVIL CORP AUDIENCE
 
   jwtValidator(options)
     .then(resultObj => {
-      //console.log({ resultObj });
-
       t.equals(prop('ok', resultObj), false)
       t.equals(hasKeys(resultObj, ['ok', 'err']), true)
       t.equals(path(['err', 'statusCode'], resultObj), 401)

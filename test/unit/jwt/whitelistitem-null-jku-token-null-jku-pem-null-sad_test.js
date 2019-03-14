@@ -14,8 +14,6 @@ test(`jwt-validator: null whitelistitem jku, null token jku, null whitelistitem 
 
   jwtValidator(options)
     .then(resultObj => {
-      //console.log({ resultObj });
-
       t.equals(prop('ok', resultObj), false)
       t.equals(hasKeys(resultObj, ['ok', 'err']), true)
       t.equals(path(['err', 'statusCode'], resultObj), 401)

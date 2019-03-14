@@ -1,6 +1,3 @@
-//const params = { tenant: 'labs' }
-// const params = { tenant: 'labs', id: 'view-medication-risk' }
-
 const req = {
   whitelistValidatorResult: {
     ok: true,
